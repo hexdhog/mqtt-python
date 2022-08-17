@@ -1,3 +1,5 @@
+from typing import Tuple
+
 class VariableByteInteger:
     """MQTT VariableByteInteger helper class"""
 
@@ -39,7 +41,7 @@ class VariableByteInteger:
         return bytes(data)
 
     @classmethod
-    def decode(cls, data: bytes) -> int:
+    def decode(cls, data: bytes, offset: int = 0) -> Tuple[int, int]:
         """Decode VariableByteInteger to an integer.
 
         Decodes a VariableByteInteger to an integer according to the mqtt-v5.0
@@ -47,24 +49,28 @@ class VariableByteInteger:
 
         Args:
             data: A bytes object to decode.
+            offset: The start position for bytes data.
 
         Returns:
-            An integer value decoded from the passed VariableByteInteger.
+            A tuple with the decoded integer value and the number of bytes read.
 
         Raises:
             ValueError: An error occurred when a malformed VariableByteInteger is given.
         """
+        start = offset
         value = 0
         multiplier = 1
-        for encoded in data:
+        while True:
+            encoded = data[offset]
             value += (encoded & (cls._MULTIPLIER - 1)) * multiplier
 
             if multiplier > cls._MULTIPLIER ** cls._MAX_BYTES:
                 raise ValueError("malformed VariableByteInteger")
 
+            offset += 1
             multiplier *= cls._MULTIPLIER
 
             if encoded & cls._MULTIPLIER == 0:
                 break
 
-        return value
+        return value, offset - start

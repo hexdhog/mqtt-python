@@ -1,5 +1,6 @@
+from primitive import VariableByteInteger
+
 class MQTTPacket:
-    _HEADER_SIZE = 2
 
     def __init__(self):
         self._type = 0
@@ -18,12 +19,40 @@ class MQTTPacket:
     def flags(self, value):
         self._flags = value
 
-    @property
-    def length(self):
-        return self._HEADER_SIZE + self._size()
-
     def _size() -> int:
         return 0
+
+    def encode(self) -> bytes():
+        """Encode packet to a bytes object.
+
+        Returns:
+            A bytes object containing the encoded packet.
+        """
+        data = bytearray()
+        data.append(self._type << 4 | self._flags)
+        data += VariableByteInteger.encode(self._size())
+        return bytes(data)
+
+    def decode(self, data: bytes, offset: int = 0) -> int:
+        """Decode a packet from a bytes objectself.
+
+        Decodes the packet from a bytes object and loads the decoded
+        content.
+
+        Args:
+            data: A bytes object containing the encoded packet.
+            offset: An integer indicating the start index of encoded packet inside the bytes object.
+
+        Returns:
+            An integer indicating the number of bytes read.
+        """
+        start = offset
+        self._type = data[offset] >> 4 & 0xf0
+        self._flags = data[offset] & 0x0f
+        offset += 1
+        self._length, size = VariableByteInteger.decode(data[offset], offset)
+        offset += size
+        return offset - start
 
 class Connect(MQTTPacket):
     def __init__(self):

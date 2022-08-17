@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from mqtt.property import VariableByteInteger
+from mqtt.primitive import VariableByteInteger
 
 class VariableByteIntegerTests(TestCase):
     def test_encode_decode(self):
@@ -13,6 +13,6 @@ class VariableByteIntegerTests(TestCase):
 
         for value in range(0, 0x10000000, 0xfffffff // 0x7f):
             encoded = VariableByteInteger.encode(value)
-            decoded = VariableByteInteger.decode(encoded)
+            decoded, _ = VariableByteInteger.decode(encoded)
             assert value == decoded
 
